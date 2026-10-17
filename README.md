@@ -4,28 +4,20 @@
 
 SkyPulse is a Python-based weather web application that provides current weather conditions, air quality information, and a 5-day forecast for your city through a clean and user-friendly interface.
 
-<p align="center">
-  <a href="https://skypulse-mlu1.onrender.com">
-    <strong>🌐 Visit Live Website</strong>
-  </a>
-  &nbsp; • &nbsp;
-  <a href="https://github.com/ishitajain-codes/SkyPuLse">
-    <strong>📂 GitHub Repository</strong>
-  </a>
-</p>
+🌐 **[Visit Live Website](https://skypulse-mlu1.onrender.com)** · 📂 **[GitHub Repository](https://github.com/ishitajain-codes/SkyPuLse)**
 
 ---
 
 ## ✨ Features
 
-- 🌡️ **Current Weather:** View temperature, feels-like temperature, and current weather conditions.
+- 🌡️ **Current Weather:** View the current temperature, feels-like temperature, and weather conditions.
 - 💧 **Humidity:** Check the current humidity level.
-- 🌬️ **Wind Speed:** Get wind speed information in km/h.
-- 🌧️ **Precipitation:** View precipitation information and forecast chances.
-- 🌿 **Air Quality Index:** Check the US AQI and its corresponding air quality category.
-- 📅 **5-Day Forecast:** View daily maximum and minimum temperatures.
+- 🌬️ **Wind Speed:** View wind speed in km/h.
+- 🌧️ **Precipitation:** Check precipitation information and forecast chances.
+- 🌿 **Air Quality Index:** View the US AQI and its corresponding air quality category.
+- 📅 **5-Day Forecast:** Explore daily maximum and minimum temperatures.
 - 🔎 **City Search:** Search for weather information by city.
-- 📊 **Weather Dashboard:** Explore important weather details in one place.
+- 📊 **Weather Dashboard:** View essential weather information in one place.
 
 ## 🛠️ Technologies Used
 
@@ -33,20 +25,20 @@ SkyPulse is a Python-based weather web application that provides current weather
 |---|---|
 | Python | Application logic |
 | Flask | Web application framework |
-| HTML | Page structure |
+| HTML | Web page structure |
 | CSS | Styling and layout |
 | Requests | Sending HTTP requests to APIs |
 | Open-Meteo Weather API | Weather and forecast data |
-| Open-Meteo Air Quality API | Air quality data |
+| Open-Meteo Air Quality API | Air quality information |
 | Gunicorn | Production application server |
-| Render | Web application deployment |
+| Render | Deployment and hosting |
 
-## 🔌 APIs
+## 🔌 APIs Used
 
-SkyPulse uses the following APIs to retrieve weather and air quality information:
+SkyPulse retrieves weather and air quality information using Open-Meteo APIs.
 
-- **Open-Meteo Weather API:** https://open-meteo.com/
-- **Open-Meteo Air Quality API:** https://open-meteo.com/en/docs/air-quality-api
+- **Weather API:** [Open-Meteo Weather API](https://open-meteo.com/)
+- **Air Quality API:** [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api)
 
 ## 🚀 Getting Started
 
@@ -69,7 +61,7 @@ git clone https://github.com/ishitajain-codes/SkyPuLse.git
 cd SkyPuLse
 ```
 
-### 3. Install the required packages
+### 3. Install the dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -83,9 +75,11 @@ python app.py
 
 ### 5. Open the application
 
-Open this address in your browser:
+Open the following address in your browser:
 
-`http://127.0.0.1:5000`
+```text
+http://127.0.0.1:5000
+```
 
 ## 📁 Project Structure
 
@@ -102,11 +96,11 @@ SkyPuLse/
 Building SkyPulse helped me practise:
 
 - Integrating external APIs into a Python application.
-- Making HTTP requests and working with JSON responses.
+- Sending HTTP requests and working with JSON responses.
 - Building web applications using Flask.
-- Displaying dynamic weather and air quality data.
+- Displaying dynamic weather and air quality information.
 - Managing project files using Git and GitHub.
-- Deploying a Python web application with Render.
+- Deploying a Python web application using Render.
 
 ## 🔮 Future Improvements
 
@@ -120,9 +114,9 @@ Building SkyPulse helped me practise:
 
 **Ishita Jain**
 
-- GitHub: https://github.com/ishitajain-codes
-- Project Repository: https://github.com/ishitajain-codes/SkyPuLse
-- Live Demo: https://skypulse-mlu1.onrender.com
+- **GitHub Profile:** [ishitajain-codes](https://github.com/ishitajain-codes)
+- **Project Repository:** [SkyPuLse](https://github.com/ishitajain-codes/SkyPuLse)
+- **Live Demo:** [SkyPulse Weather App](https://skypulse-mlu1.onrender.com)
 
 ---
 
