@@ -454,18 +454,34 @@ WEATHER_CACHE = {}
 CACHE_TTL_SECONDS = 600
 
 
+
 def get_api_response(url, params, retries=3, timeout=10):
     last_error = None
 
     for attempt in range(retries):
         try:
             response = requests.get(url, params=params, timeout=timeout)
+
+            # Stop immediately when the API rate limit is reached.
+            if response.status_code == 429:
+                response.raise_for_status()
+
             response.raise_for_status()
             return response
+
         except requests.RequestException as error:
             last_error = error
+
+            # Do not retry rate-limit or other client errors.
+            if (
+                isinstance(error, requests.HTTPError)
+                and error.response is not None
+                and 400 <= error.response.status_code < 500
+            ):
+                raise
+
             if attempt < retries - 1:
-                time.sleep(1 + attempt)
+                time.sleep(2 * (attempt + 1))
 
     raise last_error
 
