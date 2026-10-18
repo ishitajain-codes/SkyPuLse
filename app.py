@@ -1,6 +1,6 @@
-
 from flask import Flask, request, render_template_string
 import requests
+import time
 from datetime import datetime
 
 app = Flask(__name__)
@@ -12,13 +12,8 @@ HTML = """
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SkyPulse | Weather Dashboard</title>
-
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     min-height: 100vh;
@@ -54,25 +49,15 @@ header {
     gap: 15px;
 }
 
-.logo {
-    font-size: 25px;
-    font-weight: bold;
-}
-
-.tagline {
-    font-size: 13px;
-    color: var(--muted);
-}
+.logo { font-size: 25px; font-weight: bold; }
+.tagline { font-size: 13px; color: var(--muted); }
 
 main {
     width: min(950px, 90%);
     margin: 35px auto;
 }
 
-.hero {
-    text-align: center;
-    margin-bottom: 35px;
-}
+.hero { text-align: center; margin-bottom: 35px; }
 
 .eyebrow {
     color: var(--accent);
@@ -88,10 +73,7 @@ h1 {
     margin-bottom: 15px;
 }
 
-.subtitle {
-    color: var(--muted);
-    margin-bottom: 25px;
-}
+.subtitle { color: var(--muted); margin-bottom: 25px; }
 
 .search-form {
     display: flex;
@@ -111,9 +93,7 @@ input {
     outline: none;
 }
 
-input:focus {
-    border-color: var(--accent);
-}
+input:focus { border-color: var(--accent); }
 
 button {
     padding: 0 23px;
@@ -125,9 +105,7 @@ button {
     cursor: pointer;
 }
 
-button:hover {
-    opacity: 0.85;
-}
+button:hover { opacity: 0.85; }
 
 .card {
     background: var(--card);
@@ -145,14 +123,9 @@ button:hover {
     gap: 15px;
 }
 
-.weather-top h2 {
-    font-size: 25px;
-    margin: 10px 0;
-}
+.weather-top h2 { font-size: 25px; margin: 10px 0; }
 
-.weather-icon {
-    font-size: 55px;
-}
+.weather-icon { font-size: 55px; }
 
 .muted {
     color: var(--muted);
@@ -172,10 +145,7 @@ button:hover {
     vertical-align: top;
 }
 
-.description {
-    font-size: 22px;
-    margin: 6px 0;
-}
+.description { font-size: 22px; margin: 6px 0; }
 
 .metrics {
     display: grid;
@@ -191,9 +161,7 @@ button:hover {
     overflow-wrap: anywhere;
 }
 
-.metric-icon {
-    font-size: 24px;
-}
+.metric-icon { font-size: 24px; }
 
 .metric p {
     font-size: 12px;
@@ -201,9 +169,7 @@ button:hover {
     margin: 11px 0 8px;
 }
 
-.metric h3 {
-    font-size: 17px;
-}
+.metric h3 { font-size: 17px; }
 
 .aqi-label {
     display: inline-block;
@@ -223,9 +189,7 @@ button:hover {
 .aqi-hazardous { color: #9e2434; }
 .aqi-unknown { color: var(--muted); }
 
-.section-heading {
-    margin-bottom: 20px;
-}
+.section-heading { margin-bottom: 20px; }
 
 .section-heading h2 {
     font-size: 22px;
@@ -251,10 +215,7 @@ button:hover {
     color: var(--muted);
 }
 
-.forecast-icon {
-    font-size: 28px;
-    margin: 14px 0;
-}
+.forecast-icon { font-size: 28px; margin: 14px 0; }
 
 .forecast-condition {
     font-size: 11px;
@@ -305,44 +266,19 @@ footer {
 }
 
 @media (max-width: 650px) {
-    header {
-        padding: 20px 5%;
-        flex-wrap: wrap;
-    }
-
-    main {
-        margin-top: 25px;
-    }
-
-    .card {
-        padding: 19px;
-    }
-
-    .weather-top h2 {
-        font-size: 20px;
-    }
-
-    .metrics {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .forecast-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .forecast-day:last-child {
-        grid-column: 1 / -1;
-    }
-
-    button {
-        padding: 0 15px;
-    }
+    header { padding: 20px 5%; flex-wrap: wrap; }
+    main { margin-top: 25px; }
+    .card { padding: 19px; }
+    .weather-top h2 { font-size: 20px; }
+    .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .forecast-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .forecast-day:last-child { grid-column: 1 / -1; }
+    button { padding: 0 15px; }
 }
 </style>
 </head>
 
 <body class="{{ theme }}">
-
 <header>
     <div class="logo">☁ SkyPulse</div>
     <div class="tagline">Know the sky. Plan your day.</div>
@@ -357,13 +293,9 @@ footer {
         </p>
 
         <form method="POST" class="search-form">
-            <input
-                type="text"
-                name="city"
-                placeholder="Enter city name..."
-                value="{{ searched_city }}"
-                required
-            >
+            <input type="text" name="city"
+                   placeholder="Enter city name..."
+                   value="{{ searched_city }}" required>
             <button type="submit">Search ↗</button>
         </form>
     </section>
@@ -390,9 +322,7 @@ footer {
                 </div>
 
                 <h3 class="description">{{ weather.description }}</h3>
-                <p class="muted">
-                    Feels like {{ weather.feels_like }}°C
-                </p>
+                <p class="muted">Feels like {{ weather.feels_like }}°C</p>
 
                 <div class="metrics">
                     <div class="metric">
@@ -462,10 +392,7 @@ footer {
     {% endif %}
 </main>
 
-<footer>
-    SkyPulse · Built with Python, HTML and CSS
-</footer>
-
+<footer>SkyPulse · Built with Python, HTML and CSS</footer>
 </body>
 </html>
 """
@@ -502,14 +429,12 @@ def get_weather_description(code):
         96: ("Thunderstorm with Hail", "⛈️"),
         99: ("Severe Thunderstorm", "⛈️")
     }
-
     return weather_codes.get(code, ("Weather Update", "🌡️"))
 
 
 def get_aqi_details(aqi):
     if aqi is None:
         return "Unavailable", "aqi-unknown"
-
     if aqi <= 50:
         return "Good", "aqi-good"
     elif aqi <= 100:
@@ -524,36 +449,57 @@ def get_aqi_details(aqi):
         return "Hazardous", "aqi-hazardous"
 
 
-def get_weather(city):
-    try:
-        geo_url = "https://geocoding-api.open-meteo.com/v1/search"
+# Retry temporary API failures and cache successful results.
+WEATHER_CACHE = {}
+CACHE_TTL_SECONDS = 600
 
-        geo_response = requests.get(
-            geo_url,
+
+def get_api_response(url, params, retries=3, timeout=10):
+    last_error = None
+
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, params=params, timeout=timeout)
+            response.raise_for_status()
+            return response
+        except requests.RequestException as error:
+            last_error = error
+            if attempt < retries - 1:
+                time.sleep(1 + attempt)
+
+    raise last_error
+
+
+def get_weather(city):
+    cache_key = city.strip().casefold()
+    cached = WEATHER_CACHE.get(cache_key)
+
+    if cached and time.time() - cached["saved_at"] < CACHE_TTL_SECONDS:
+        return cached["result"]
+
+    try:
+        geo_response = get_api_response(
+            "https://geocoding-api.open-meteo.com/v1/search",
             params={
                 "name": city,
                 "count": 1,
                 "language": "en",
                 "format": "json"
             },
+            retries=3,
             timeout=10
         )
-        geo_response.raise_for_status()
         geo_data = geo_response.json()
 
         if not geo_data.get("results"):
-            return {
-                "error": "City not found. Please check the spelling."
-            }, []
+            return {"error": "City not found. Please check the spelling."}, []
 
         place = geo_data["results"][0]
         latitude = place["latitude"]
         longitude = place["longitude"]
 
-        weather_url = "https://api.open-meteo.com/v1/forecast"
-
-        weather_response = requests.get(
-            weather_url,
+        weather_response = get_api_response(
+            "https://api.open-meteo.com/v1/forecast",
             params={
                 "latitude": latitude,
                 "longitude": longitude,
@@ -569,23 +515,21 @@ def get_weather(city):
                 "forecast_days": 5,
                 "timezone": "auto"
             },
-            timeout=10
+            retries=3,
+            timeout=15
         )
-        weather_response.raise_for_status()
         data = weather_response.json()
 
         current = data["current"]
         units = data["current_units"]
         local_time = datetime.fromisoformat(current["time"])
 
-        description, icon = get_weather_description(
-            current["weather_code"]
-        )
+        description, icon = get_weather_description(current["weather_code"])
 
         aqi = None
 
         try:
-            aqi_response = requests.get(
+            aqi_response = get_api_response(
                 "https://air-quality-api.open-meteo.com/v1/air-quality",
                 params={
                     "latitude": latitude,
@@ -593,9 +537,9 @@ def get_weather(city):
                     "current": "us_aqi",
                     "timezone": "auto"
                 },
+                retries=2,
                 timeout=10
             )
-            aqi_response.raise_for_status()
             aqi_data = aqi_response.json()
             aqi = aqi_data.get("current", {}).get("us_aqi")
         except (requests.RequestException, ValueError, TypeError):
@@ -607,21 +551,14 @@ def get_weather(city):
         forecast = []
 
         for index in range(len(daily["time"])):
-            forecast_date = datetime.fromisoformat(
-                daily["time"][index]
-            )
-
+            forecast_date = datetime.fromisoformat(daily["time"][index])
             day_description, day_icon = get_weather_description(
                 daily["weather_code"][index]
             )
-
             rain_value = daily["precipitation_probability_max"][index]
 
             forecast.append({
-                "day": (
-                    "Today" if index == 0
-                    else forecast_date.strftime("%a")
-                ),
+                "day": "Today" if index == 0 else forecast_date.strftime("%a"),
                 "description": day_description,
                 "icon": day_icon,
                 "max": round(daily["temperature_2m_max"][index]),
@@ -649,11 +586,22 @@ def get_weather(city):
             "is_day": current["is_day"] == 1
         }
 
-        return weather, forecast
+        result = (weather, forecast)
+        WEATHER_CACHE[cache_key] = {
+            "saved_at": time.time(),
+            "result": result
+        }
+        return result
 
     except requests.RequestException:
+        if cached:
+            return cached["result"]
+
         return {
-            "error": "Unable to connect to the weather service. Check your internet."
+            "error": (
+                "The weather service is temporarily unavailable. "
+                "Please try again in a little while."
+            )
         }, []
 
     except (KeyError, ValueError, TypeError, IndexError):
