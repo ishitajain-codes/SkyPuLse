@@ -1,484 +1,691 @@
-from flask import Flask, render_template_string, request
+
+from flask import Flask, request, render_template_string
 import requests
 from datetime import datetime
 
 app = Flask(__name__)
 
-HTML_TEMPLATE = """
+HTML = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkyPulse | Weather Dashboard</title>
-    <style>
-        :root {
-            --bg-color: #f4f8fc;
-            --text-color: #111827;
-            --card-bg: #ffffff;
-            --card-border: #e2e8f0;
-            --sub-text: #64748b;
-            --accent: #2563eb;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyPulse | Weather Dashboard</title>
 
-        .dark-theme {
-            --bg-color: #0b0f19;
-            --text-color: #f8fafc;
-            --card-bg: #111827;
-            --card-border: #1f2937;
-            --sub-text: #94a3b8;
-            --accent: #38bdf8;
-        }
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
+body {
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    transition: 0.3s;
+}
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
+body.day {
+    background: linear-gradient(135deg, #eaf5ff, #f8fbff);
+    color: #172d4d;
+    --card: #ffffff;
+    --muted: #63758d;
+    --border: #e0e9f4;
+    --accent: #2878ed;
+    --soft: #edf5ff;
+}
 
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 40px;
-        }
+body.night {
+    background: linear-gradient(135deg, #101a31, #202b48);
+    color: #f2f5ff;
+    --card: #202c46;
+    --muted: #b0bdd4;
+    --border: #35435e;
+    --accent: #83b5ff;
+    --soft: #293953;
+}
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 700;
-            font-size: 20px;
-        }
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 8%;
+    gap: 15px;
+}
 
-        .tagline {
-            font-size: 13px;
-            color: var(--sub-text);
-        }
+.logo {
+    font-size: 25px;
+    font-weight: bold;
+}
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            flex-grow: 1;
-            width: 100%;
-        }
+.tagline {
+    font-size: 13px;
+    color: var(--muted);
+}
 
-        .hero {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+main {
+    width: min(950px, 90%);
+    margin: 35px auto;
+}
 
-        .sub-title {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            color: var(--accent);
-            margin-bottom: 12px;
-        }
+.hero {
+    text-align: center;
+    margin-bottom: 35px;
+}
 
-        .hero h1 {
-            font-size: 40px;
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 10px;
-        }
+.eyebrow {
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+}
 
-        .description {
-            font-size: 15px;
-            color: var(--sub-text);
-            margin-bottom: 25px;
-        }
+h1 {
+    font-size: clamp(36px, 6vw, 55px);
+    line-height: 1.15;
+    margin-bottom: 15px;
+}
 
-        .search-box {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            max-width: 450px;
-            margin: 0 auto;
-        }
+.subtitle {
+    color: var(--muted);
+    margin-bottom: 25px;
+}
 
-        .search-box input {
-            flex: 1;
-            padding: 12px 18px;
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            background-color: var(--card-bg);
-            color: var(--text-color);
-        }
+.search-form {
+    display: flex;
+    max-width: 510px;
+    margin: auto;
+    gap: 10px;
+}
 
-        .search-box button {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px 22px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-        }
+input {
+    flex: 1;
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    color: inherit;
+    outline: none;
+}
 
-        .error-card {
-            border: 1px solid #fca5a5;
-            background-color: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            padding: 14px;
-            border-radius: 8px;
-            text-align: center;
-            margin-top: 20px;
-        }
+input:focus {
+    border-color: var(--accent);
+}
 
-        .weather-card {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 14px;
-            border: 1px solid var(--card-border);
-            margin-top: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            position: relative;
-        }
+button {
+    padding: 0 23px;
+    border: none;
+    border-radius: 12px;
+    background: var(--accent);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
 
-        .weather-icon-large {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            font-size: 48px;
-        }
+button:hover {
+    opacity: 0.85;
+}
 
-        .section-title {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: var(--sub-text);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 12px 35px #0000000a;
+}
 
-        .city-name {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
+.weather-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
 
-        .date-time {
-            font-size: 13px;
-            color: var(--sub-text);
-            margin-bottom: 20px;
-        }
+.weather-top h2 {
+    font-size: 25px;
+    margin: 10px 0;
+}
 
-        .main-temp-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
+.weather-icon {
+    font-size: 55px;
+}
 
-        .temp-val {
-            font-size: 54px;
-            font-weight: 800;
-        }
+.muted {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
 
-        .temp-unit {
-            font-size: 22px;
-            color: var(--accent);
-            font-weight: 600;
-        }
+.temperature {
+    font-size: clamp(65px, 12vw, 90px);
+    font-weight: bold;
+    letter-spacing: -4px;
+    margin-top: 18px;
+}
 
-        .weather-condition {
-            font-size: 18px;
-            font-weight: 600;
-            margin-top: 5px;
-        }
+.temperature span {
+    font-size: 38px;
+    vertical-align: top;
+}
 
-        .feels-like {
-            font-size: 13px;
-            color: var(--sub-text);
-        }
+.description {
+    font-size: 22px;
+    margin: 6px 0;
+}
 
-        .details-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 15px;
-            border-top: 1px solid var(--card-border);
-            padding-top: 20px;
-        }
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 28px;
+}
 
-        .detail-item {
-            background: var(--bg-color);
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid var(--card-border);
-        }
+.metric {
+    padding: 16px 13px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow-wrap: anywhere;
+}
 
-        .detail-label {
-            font-size: 12px;
-            color: var(--sub-text);
-            margin-bottom: 6px;
-        }
+.metric-icon {
+    font-size: 24px;
+}
 
-        .detail-value {
-            font-size: 16px;
-            font-weight: 700;
-        }
+.metric p {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 11px 0 8px;
+}
 
-        .forecast-container {
-            margin-top: 25px;
-        }
+.metric h3 {
+    font-size: 17px;
+}
 
-        .forecast-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-top: 10px;
-        }
+.aqi-label {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    background: var(--soft);
+}
 
-        .forecast-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-        }
+.aqi-good { color: #16834a; }
+.aqi-moderate { color: #a56a00; }
+.aqi-sensitive { color: #b45b12; }
+.aqi-unhealthy { color: #d64242; }
+.aqi-very-unhealthy { color: #a02bc1; }
+.aqi-hazardous { color: #9e2434; }
+.aqi-unknown { color: var(--muted); }
 
-        .forecast-day {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
+.section-heading {
+    margin-bottom: 20px;
+}
 
-        .forecast-emoji {
-            font-size: 24px;
-            margin: 5px 0;
-        }
+.section-heading h2 {
+    font-size: 22px;
+    margin-bottom: 7px;
+}
 
-        .forecast-temp {
-            font-size: 15px;
-            font-weight: 700;
-            margin-top: 6px;
-        }
+.forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
 
-        .forecast-temp span {
-            color: var(--sub-text);
-            font-weight: 400;
-            font-size: 13px;
-        }
+.forecast-day {
+    text-align: center;
+    padding: 17px 8px;
+    background: var(--soft);
+    border-radius: 15px;
+    border: 1px solid var(--border);
+}
 
-        footer {
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: var(--sub-text);
-        }
-    </style>
+.forecast-day .day-name {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.forecast-icon {
+    font-size: 28px;
+    margin: 14px 0;
+}
+
+.forecast-condition {
+    font-size: 11px;
+    min-height: 28px;
+    line-height: 1.4;
+}
+
+.forecast-temp {
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 12px;
+}
+
+.forecast-low {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.rain-chance {
+    color: var(--accent);
+    font-size: 11px;
+    margin-top: 10px;
+}
+
+.error {
+    padding: 20px;
+    background: var(--card);
+    border: 1px solid #e99;
+    border-radius: 12px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.source {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.8;
+    margin: 20px 0;
+}
+
+footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 25px;
+}
+
+@media (max-width: 650px) {
+    header {
+        padding: 20px 5%;
+        flex-wrap: wrap;
+    }
+
+    main {
+        margin-top: 25px;
+    }
+
+    .card {
+        padding: 19px;
+    }
+
+    .weather-top h2 {
+        font-size: 20px;
+    }
+
+    .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .forecast-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .forecast-day:last-child {
+        grid-column: 1 / -1;
+    }
+
+    button {
+        padding: 0 15px;
+    }
+}
+</style>
 </head>
-<body class="{{ theme_class }}">
 
-    <header class="navbar">
-        <div class="logo">
-            <span>☁️</span>
-            <span>SkyPulse</span>
-        </div>
-        <div class="tagline">Know the sky. Plan your day.</div>
-    </header>
+<body class="{{ theme }}">
 
-    <main class="container">
-        <div class="hero">
-            <p class="sub-title">YOUR PERSONAL WEATHER DASHBOARD</p>
-            <h1>Feel the weather.<br>Plan your day.</h1>
-            <p class="description">Real-time weather and air quality for your city</p>
+<header>
+    <div class="logo">☁ SkyPulse</div>
+    <div class="tagline">Know the sky. Plan your day.</div>
+</header>
 
-            <form action="/" method="POST" class="search-box">
-                <input type="text" name="city" placeholder="Search city (e.g. London)" required autocomplete="off">
-                <button type="submit">Search ↗</button>
-            </form>
-        </div>
+<main>
+    <section class="hero">
+        <p class="eyebrow">YOUR PERSONAL WEATHER DASHBOARD</p>
+        <h1>Feel the weather.<br>Plan your day.</h1>
+        <p class="subtitle">
+            Real-time weather and air quality for your city.
+        </p>
 
-        {% if error %}
-        <div class="error-card">
-            <p>⚠️ {{ error }}</p>
-        </div>
-        {% endif %}
+        <form method="POST" class="search-form">
+            <input
+                type="text"
+                name="city"
+                placeholder="Enter city name..."
+                value="{{ searched_city }}"
+                required
+            >
+            <button type="submit">Search ↗</button>
+        </form>
+    </section>
 
-        {% if weather %}
-        <div class="weather-card">
-            <div class="weather-icon-large">{{ weather.emoji }}</div>
-            <div class="section-title">Current Weather</div>
-            <div class="city-name">📍 {{ weather.city }}{% if weather.country %}, {{ weather.country }}{% endif %}</div>
-            <div class="date-time">🕒 {{ weather.current_time }}</div>
-
-            <div class="main-temp-area">
-                <div>
+    {% if weather %}
+        {% if weather.error %}
+            <div class="error">{{ weather.error }}</div>
+        {% else %}
+            <section class="card">
+                <div class="weather-top">
                     <div>
-                        <span class="temp-val">{{ weather.temperature }}</span>
-                        <span class="temp-unit">°C</span>
+                        <p class="eyebrow">CURRENT WEATHER</p>
+                        <h2>{{ weather.city }}, {{ weather.country }}</h2>
+                        <p class="muted">
+                            {{ weather.day }}, {{ weather.date }}
+                            · {{ weather.time }}
+                        </p>
                     </div>
-                    <div class="weather-condition">{{ weather.emoji }} {{ weather.condition_text }}</div>
-                    <div class="feels-like">Feels like {{ weather.apparent_temp }}°C</div>
+                    <div class="weather-icon">{{ weather.icon }}</div>
                 </div>
-            </div>
 
-            <div class="details-grid">
-                <div class="detail-item">
-                    <div class="detail-label">💧 Humidity</div>
-                    <div class="detail-value">{{ weather.humidity }}%</div>
+                <div class="temperature">
+                    {{ weather.temperature }}<span>°C</span>
                 </div>
-                <div class="detail-item">
-                    <div class="detail-label">🌬️ Wind Speed</div>
-                    <div class="detail-value">{{ weather.windspeed }} km/h</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">🌧️ Precipitation</div>
-                    <div class="detail-value">{{ weather.precipitation }} mm</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">🍃 Air Quality (AQI)</div>
-                    <div class="detail-value">{{ weather.aqi }}</div>
-                </div>
-            </div>
-        </div>
 
-        {% if forecast %}
-        <div class="forecast-container">
-            <div class="section-title">Plan Ahead</div>
-            <div class="city-name" style="font-size: 18px;">📅 5-Day Forecast</div>
-            <div class="forecast-grid">
-                {% for day in forecast %}
-                <div class="forecast-card">
-                    <div class="forecast-day">{{ day.date }}</div>
-                    <div class="forecast-emoji">{{ day.emoji }}</div>
-                    <div style="font-size: 12px; color: var(--sub-text);">{{ day.condition }}</div>
-                    <div class="forecast-temp">{{ day.max_temp }}° <span>/ {{ day.min_temp }}°</span></div>
+                <h3 class="description">{{ weather.description }}</h3>
+                <p class="muted">
+                    Feels like {{ weather.feels_like }}°C
+                </p>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <span class="metric-icon">💧</span>
+                        <p>Humidity</p>
+                        <h3>{{ weather.humidity }}%</h3>
+                    </div>
+
+                    <div class="metric">
+                        <span class="metric-icon">🌬️</span>
+                        <p>Wind Speed</p>
+                        <h3>{{ weather.wind }} {{ weather.wind_unit }}</h3>
+                    </div>
+
+                    <div class="metric">
+                        <span class="metric-icon">🌧️</span>
+                        <p>Precipitation</p>
+                        <h3>{{ weather.precipitation }} mm</h3>
+                    </div>
+
+                    <div class="metric">
+                        <span class="metric-icon">🌿</span>
+                        <p>Air Quality (US AQI)</p>
+                        <h3>{{ weather.aqi }}</h3>
+                        <span class="aqi-label {{ weather.aqi_class }}">
+                            {{ weather.aqi_label }}
+                        </span>
+                    </div>
                 </div>
-                {% endfor %}
-            </div>
-        </div>
+            </section>
+
+            {% if forecast %}
+                <section class="card">
+                    <div class="section-heading">
+                        <p class="eyebrow">PLAN AHEAD</p>
+                        <h2>5-Day Forecast</h2>
+                        <p class="muted">
+                            Daily maximum and minimum temperatures
+                        </p>
+                    </div>
+
+                    <div class="forecast-grid">
+                        {% for day in forecast %}
+                            <div class="forecast-day">
+                                <div class="day-name">{{ day.day }}</div>
+                                <div class="forecast-icon">{{ day.icon }}</div>
+                                <div class="forecast-condition">
+                                    {{ day.description }}
+                                </div>
+                                <div class="forecast-temp">{{ day.max }}°</div>
+                                <div class="forecast-low">{{ day.min }}°</div>
+                                <div class="rain-chance">
+                                    🌧 {{ day.rain }}% chance
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            <p class="source">
+                Weather and forecast: Open-Meteo<br>
+                Air quality: Open-Meteo Air Quality API<br>
+                Temperatures in °C · Wind speed in km/h
+            </p>
         {% endif %}
-        {% endif %}
-    </main>
+    {% endif %}
+</main>
 
-    <footer>
-        <p>SkyPulse · Built with Python, HTML and CSS ⚡</p>
-    </footer>
+<footer>
+    SkyPulse · Built with Python, HTML and CSS
+</footer>
 
 </body>
 </html>
 """
 
-def get_weather_info(code):
-    # Returns a tuple of (Description, Emoji)
-    weather_map = {
+
+def get_weather_description(code):
+    weather_codes = {
         0: ("Clear Sky", "☀️"),
         1: ("Mainly Clear", "🌤️"),
         2: ("Partly Cloudy", "⛅"),
         3: ("Overcast", "☁️"),
         45: ("Foggy", "🌫️"),
-        48: ("Depositing Rime Fog", "🌫️"),
+        48: ("Rime Fog", "🌫️"),
         51: ("Light Drizzle", "🌦️"),
-        53: ("Moderate Drizzle", "🌧️"),
+        53: ("Moderate Drizzle", "🌦️"),
         55: ("Dense Drizzle", "🌧️"),
-        61: ("Slight Rain", "🌦️"),
+        56: ("Freezing Drizzle", "🌧️"),
+        57: ("Heavy Freezing Drizzle", "🌧️"),
+        61: ("Slight Rain", "🌧️"),
         63: ("Moderate Rain", "🌧️"),
         65: ("Heavy Rain", "🌧️"),
+        66: ("Freezing Rain", "🌧️"),
+        67: ("Heavy Freezing Rain", "🌧️"),
         71: ("Slight Snow", "🌨️"),
         73: ("Moderate Snow", "❄️"),
         75: ("Heavy Snow", "❄️"),
-        95: ("Thunderstorm", "⚡")
+        77: ("Snow Grains", "🌨️"),
+        80: ("Rain Showers", "🌦️"),
+        81: ("Moderate Showers", "🌧️"),
+        82: ("Heavy Showers", "⛈️"),
+        85: ("Snow Showers", "🌨️"),
+        86: ("Heavy Snow Showers", "❄️"),
+        95: ("Thunderstorm", "⛈️"),
+        96: ("Thunderstorm with Hail", "⛈️"),
+        99: ("Severe Thunderstorm", "⛈️")
     }
-    return weather_map.get(code, ("Clear Sky", "☀️"))
+
+    return weather_codes.get(code, ("Weather Update", "🌡️"))
+
+
+def get_aqi_details(aqi):
+    if aqi is None:
+        return "Unavailable", "aqi-unknown"
+
+    if aqi <= 50:
+        return "Good", "aqi-good"
+    elif aqi <= 100:
+        return "Moderate", "aqi-moderate"
+    elif aqi <= 150:
+        return "Unhealthy for Sensitive Groups", "aqi-sensitive"
+    elif aqi <= 200:
+        return "Unhealthy", "aqi-unhealthy"
+    elif aqi <= 300:
+        return "Very Unhealthy", "aqi-very-unhealthy"
+    else:
+        return "Hazardous", "aqi-hazardous"
+
+
+def get_weather(city):
+    try:
+        geo_url = "https://geocoding-api.open-meteo.com/v1/search"
+
+        geo_response = requests.get(
+            geo_url,
+            params={
+                "name": city,
+                "count": 1,
+                "language": "en",
+                "format": "json"
+            },
+            timeout=10
+        )
+        geo_response.raise_for_status()
+        geo_data = geo_response.json()
+
+        if not geo_data.get("results"):
+            return {
+                "error": "City not found. Please check the spelling."
+            }, []
+
+        place = geo_data["results"][0]
+        latitude = place["latitude"]
+        longitude = place["longitude"]
+
+        weather_url = "https://api.open-meteo.com/v1/forecast"
+
+        weather_response = requests.get(
+            weather_url,
+            params={
+                "latitude": latitude,
+                "longitude": longitude,
+                "current": (
+                    "temperature_2m,relative_humidity_2m,"
+                    "apparent_temperature,is_day,precipitation,"
+                    "weather_code,wind_speed_10m"
+                ),
+                "daily": (
+                    "weather_code,temperature_2m_max,"
+                    "temperature_2m_min,precipitation_probability_max"
+                ),
+                "forecast_days": 5,
+                "timezone": "auto"
+            },
+            timeout=10
+        )
+        weather_response.raise_for_status()
+        data = weather_response.json()
+
+        current = data["current"]
+        units = data["current_units"]
+        local_time = datetime.fromisoformat(current["time"])
+
+        description, icon = get_weather_description(
+            current["weather_code"]
+        )
+
+        aqi = None
+
+        try:
+            aqi_response = requests.get(
+                "https://air-quality-api.open-meteo.com/v1/air-quality",
+                params={
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "current": "us_aqi",
+                    "timezone": "auto"
+                },
+                timeout=10
+            )
+            aqi_response.raise_for_status()
+            aqi_data = aqi_response.json()
+            aqi = aqi_data.get("current", {}).get("us_aqi")
+        except (requests.RequestException, ValueError, TypeError):
+            aqi = None
+
+        aqi_label, aqi_class = get_aqi_details(aqi)
+
+        daily = data["daily"]
+        forecast = []
+
+        for index in range(len(daily["time"])):
+            forecast_date = datetime.fromisoformat(
+                daily["time"][index]
+            )
+
+            day_description, day_icon = get_weather_description(
+                daily["weather_code"][index]
+            )
+
+            rain_value = daily["precipitation_probability_max"][index]
+
+            forecast.append({
+                "day": (
+                    "Today" if index == 0
+                    else forecast_date.strftime("%a")
+                ),
+                "description": day_description,
+                "icon": day_icon,
+                "max": round(daily["temperature_2m_max"][index]),
+                "min": round(daily["temperature_2m_min"][index]),
+                "rain": rain_value if rain_value is not None else 0
+            })
+
+        weather = {
+            "city": place["name"],
+            "country": place.get("country", ""),
+            "temperature": current["temperature_2m"],
+            "feels_like": current["apparent_temperature"],
+            "humidity": current["relative_humidity_2m"],
+            "wind": current["wind_speed_10m"],
+            "wind_unit": units["wind_speed_10m"],
+            "precipitation": current["precipitation"],
+            "description": description,
+            "icon": icon,
+            "aqi": aqi if aqi is not None else "N/A",
+            "aqi_label": aqi_label,
+            "aqi_class": aqi_class,
+            "date": local_time.strftime("%d %B %Y"),
+            "time": local_time.strftime("%I:%M %p"),
+            "day": local_time.strftime("%A"),
+            "is_day": current["is_day"] == 1
+        }
+
+        return weather, forecast
+
+    except requests.RequestException:
+        return {
+            "error": "Unable to connect to the weather service. Check your internet."
+        }, []
+
+    except (KeyError, ValueError, TypeError, IndexError):
+        return {
+            "error": "Weather data could not be processed. Please try again."
+        }, []
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    weather_data = None
-    forecast_data = None
-    error_message = None
-    
-    current_hour = datetime.now().hour
-    theme_class = "" if (6 <= current_hour < 18) else "dark-theme"
+    city = ""
+    weather = None
+    forecast = []
+    theme = "day"
 
     if request.method == "POST":
-        city = request.form.get("city")
-        if city and city.strip():
-            try:
-                geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city.strip()}&count=1"
-                geo_res = requests.get(geo_url, timeout=10).json()
+        city = request.form.get("city", "").strip()
 
-                if "results" in geo_res and len(geo_res["results"]) > 0:
-                    loc = geo_res["results"][0]
-                    lat, lon = loc["latitude"], loc["longitude"]
-                    city_name, country = loc["name"], loc.get("country", "")
+        if city:
+            weather, forecast = get_weather(city)
 
-                    w_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&hourly=relative_humidity_2m,apparent_temperature,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto"
-                    w_res = requests.get(w_url, timeout=10).json()
+            if not weather.get("error") and not weather["is_day"]:
+                theme = "night"
 
-                    aqi_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=us_aqi"
-                    aqi_res = requests.get(aqi_url, timeout=10).json()
-                    aqi_val = aqi_res.get("current", {}).get("us_aqi", "N/A")
+    return render_template_string(
+        HTML,
+        weather=weather,
+        forecast=forecast,
+        theme=theme,
+        searched_city=city
+    )
 
-                    current = w_res.get("current_weather", {})
-                    hourly = w_res.get("hourly", {})
-                    daily = w_res.get("daily", {})
-
-                    humidity = 50
-                    apparent_temp = current.get("temperature", 0)
-                    precipitation = 0.0
-
-                    if "relative_humidity_2m" in hourly and len(hourly["relative_humidity_2m"]) > 0:
-                        humidity = hourly["relative_humidity_2m"][0]
-                    if "apparent_temperature" in hourly and len(hourly["apparent_temperature"]) > 0:
-                        apparent_temp = hourly["apparent_temperature"][0]
-                    if "precipitation" in hourly and len(hourly["precipitation"]) > 0:
-                        precipitation = hourly["precipitation"][0]
-
-                    weather_code = current.get("weathercode", 0)
-                    cond_text, cond_emoji = get_weather_info(weather_code)
-
-                    weather_data = {
-                        "city": city_name,
-                        "country": country,
-                        "current_time": datetime.now().strftime("%A, %d %B %Y · %I:%M %p"),
-                        "temperature": round(current.get("temperature", 0)),
-                        "apparent_temp": round(apparent_temp),
-                        "humidity": round(humidity),
-                        "windspeed": round(current.get("windspeed", 0)),
-                        "precipitation": precipitation,
-                        "condition_text": cond_text,
-                        "emoji": cond_emoji,
-                        "aqi": aqi_val
-                    }
-
-                    forecast_data = []
-                    if "time" in daily:
-                        for i in range(min(5, len(daily["time"]))):
-                            date_str = daily["time"][i]
-                            formatted_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%a, %d %b")
-                            f_code = daily["weather_code"][i]
-                            f_text, f_emoji = get_weather_info(f_code)
-                            forecast_data.append({
-                                "date": formatted_date,
-                                "max_temp": round(daily["temperature_2m_max"][i]),
-                                "min_temp": round(daily["temperature_2m_min"][i]),
-                                "condition": f_text,
-                                "emoji": f_emoji
-                            })
-                else:
-                    error_message = f"City '{city}' not found. Please check the spelling."
-            except Exception as e:
-                print("ERROR:", str(e))
-                error_message = "Unable to connect to the weather service. Check your internet"
-
-    return render_template_string(HTML_TEMPLATE, weather=weather_data, forecast=forecast_data, error=error_message, theme_class=theme_class)
 
 if __name__ == "__main__":
     app.run(debug=True)
