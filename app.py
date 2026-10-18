@@ -368,97 +368,97 @@ footer {
         </form>
     </section>
 
-    {% if weather.error %}
-        <div class="error">{{ weather.error }}</div>
-    {% else %}
-
-        <section class="card">
-            <div class="weather-top">
-                <div>
-                    <p class="eyebrow">CURRENT WEATHER</p>
-                    <h2>{{ weather.city }}, {{ weather.country }}</h2>
-                    <p class="muted">
-                        {{ weather.day }}, {{ weather.date }}
-                        · {{ weather.time }}
-                    </p>
+    {% if weather %}
+        {% if weather.error %}
+            <div class="error">{{ weather.error }}</div>
+        {% else %}
+            <section class="card">
+                <div class="weather-top">
+                    <div>
+                        <p class="eyebrow">CURRENT WEATHER</p>
+                        <h2>{{ weather.city }}, {{ weather.country }}</h2>
+                        <p class="muted">
+                            {{ weather.day }}, {{ weather.date }}
+                            · {{ weather.time }}
+                        </p>
+                    </div>
+                    <div class="weather-icon">{{ weather.icon }}</div>
                 </div>
 
-                <div class="weather-icon">{{ weather.icon }}</div>
-            </div>
-
-            <div class="temperature">
-                {{ weather.temperature }}<span>°C</span>
-            </div>
-
-            <h3 class="description">{{ weather.description }}</h3>
-            <p class="muted">
-                Feels like {{ weather.feels_like }}°C
-            </p>
-
-            <div class="metrics">
-                <div class="metric">
-                    <span class="metric-icon">💧</span>
-                    <p>Humidity</p>
-                    <h3>{{ weather.humidity }}%</h3>
+                <div class="temperature">
+                    {{ weather.temperature }}<span>°C</span>
                 </div>
 
-                <div class="metric">
-                    <span class="metric-icon">🌬️</span>
-                    <p>Wind Speed</p>
-                    <h3>{{ weather.wind }} {{ weather.wind_unit }}</h3>
-                </div>
-
-                <div class="metric">
-                    <span class="metric-icon">🌧️</span>
-                    <p>Precipitation</p>
-                    <h3>{{ weather.precipitation }} mm</h3>
-                </div>
-
-                <div class="metric">
-                    <span class="metric-icon">🌿</span>
-                    <p>Air Quality (US AQI)</p>
-                    <h3>{{ weather.aqi }}</h3>
-                    <span class="aqi-label {{ weather.aqi_class }}">
-                        {{ weather.aqi_label }}
-                    </span>
-                </div>
-            </div>
-        </section>
-
-        {% if forecast %}
-        <section class="card">
-            <div class="section-heading">
-                <p class="eyebrow">PLAN AHEAD</p>
-                <h2>5-Day Forecast</h2>
+                <h3 class="description">{{ weather.description }}</h3>
                 <p class="muted">
-                    Daily maximum and minimum temperatures
+                    Feels like {{ weather.feels_like }}°C
                 </p>
-            </div>
 
-            <div class="forecast-grid">
-                {% for day in forecast %}
-                <div class="forecast-day">
-                    <div class="day-name">{{ day.day }}</div>
-                    <div class="forecast-icon">{{ day.icon }}</div>
-                    <div class="forecast-condition">
-                        {{ day.description }}
+                <div class="metrics">
+                    <div class="metric">
+                        <span class="metric-icon">💧</span>
+                        <p>Humidity</p>
+                        <h3>{{ weather.humidity }}%</h3>
                     </div>
-                    <div class="forecast-temp">{{ day.max }}°</div>
-                    <div class="forecast-low">{{ day.min }}°</div>
-                    <div class="rain-chance">
-                        🌧 {{ day.rain }}% chance
+
+                    <div class="metric">
+                        <span class="metric-icon">🌬️</span>
+                        <p>Wind Speed</p>
+                        <h3>{{ weather.wind }} {{ weather.wind_unit }}</h3>
+                    </div>
+
+                    <div class="metric">
+                        <span class="metric-icon">🌧️</span>
+                        <p>Precipitation</p>
+                        <h3>{{ weather.precipitation }} mm</h3>
+                    </div>
+
+                    <div class="metric">
+                        <span class="metric-icon">🌿</span>
+                        <p>Air Quality (US AQI)</p>
+                        <h3>{{ weather.aqi }}</h3>
+                        <span class="aqi-label {{ weather.aqi_class }}">
+                            {{ weather.aqi_label }}
+                        </span>
                     </div>
                 </div>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
+            </section>
 
-        <p class="source">
-            Weather and forecast: Open-Meteo<br>
-            Air quality: Open-Meteo Air Quality API<br>
-            Temperatures in °C · Wind speed in km/h
-        </p>
+            {% if forecast %}
+                <section class="card">
+                    <div class="section-heading">
+                        <p class="eyebrow">PLAN AHEAD</p>
+                        <h2>5-Day Forecast</h2>
+                        <p class="muted">
+                            Daily maximum and minimum temperatures
+                        </p>
+                    </div>
+
+                    <div class="forecast-grid">
+                        {% for day in forecast %}
+                            <div class="forecast-day">
+                                <div class="day-name">{{ day.day }}</div>
+                                <div class="forecast-icon">{{ day.icon }}</div>
+                                <div class="forecast-condition">
+                                    {{ day.description }}
+                                </div>
+                                <div class="forecast-temp">{{ day.max }}°</div>
+                                <div class="forecast-low">{{ day.min }}°</div>
+                                <div class="rain-chance">
+                                    🌧 {{ day.rain }}% chance
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            <p class="source">
+                Weather and forecast: Open-Meteo<br>
+                Air quality: Open-Meteo Air Quality API<br>
+                Temperatures in °C · Wind speed in km/h
+            </p>
+        {% endif %}
     {% endif %}
 </main>
 
@@ -526,7 +526,6 @@ def get_aqi_details(aqi):
 
 def get_weather(city):
     try:
-        # 1. Find the city
         geo_url = "https://geocoding-api.open-meteo.com/v1/search"
 
         geo_response = requests.get(
@@ -543,13 +542,14 @@ def get_weather(city):
         geo_data = geo_response.json()
 
         if not geo_data.get("results"):
-            return {"error": "City not found. Please check the spelling."}, []
+            return {
+                "error": "City not found. Please check the spelling."
+            }, []
 
         place = geo_data["results"][0]
         latitude = place["latitude"]
         longitude = place["longitude"]
 
-        # 2. Current weather and five-day forecast
         weather_url = "https://api.open-meteo.com/v1/forecast"
 
         weather_response = requests.get(
@@ -582,7 +582,6 @@ def get_weather(city):
             current["weather_code"]
         )
 
-        # 3. Air quality
         aqi = None
 
         try:
@@ -604,7 +603,6 @@ def get_weather(city):
 
         aqi_label, aqi_class = get_aqi_details(aqi)
 
-        # 4. Prepare five-day forecast
         daily = data["daily"]
         forecast = []
 
@@ -666,17 +664,19 @@ def get_weather(city):
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    city = "Aligarh"
-
-    if request.method == "POST":
-        city = request.form.get("city", "").strip() or "Aligarh"
-
-    weather, forecast = get_weather(city)
-
+    city = ""
+    weather = None
+    forecast = []
     theme = "day"
 
-    if not weather.get("error") and not weather["is_day"]:
-        theme = "night"
+    if request.method == "POST":
+        city = request.form.get("city", "").strip()
+
+        if city:
+            weather, forecast = get_weather(city)
+
+            if not weather.get("error") and not weather["is_day"]:
+                theme = "night"
 
     return render_template_string(
         HTML,
