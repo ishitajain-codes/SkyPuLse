@@ -593,7 +593,8 @@ def get_weather(city):
         }
         return result
 
-    except requests.RequestException:
+    except requests.RequestException as error:
+        print(f"Weather API error: {error!r}", flush=True)
         if cached:
             return cached["result"]
 
