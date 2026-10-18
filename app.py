@@ -147,6 +147,14 @@ HTML_TEMPLATE = """
             border: 1px solid var(--card-border);
             margin-top: 20px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .weather-icon-large {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 48px;
         }
 
         .section-title {
@@ -247,13 +255,18 @@ HTML_TEMPLATE = """
         .forecast-day {
             font-weight: 600;
             font-size: 14px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
+        }
+
+        .forecast-emoji {
+            font-size: 24px;
+            margin: 5px 0;
         }
 
         .forecast-temp {
             font-size: 15px;
             font-weight: 700;
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
         .forecast-temp span {
@@ -274,7 +287,7 @@ HTML_TEMPLATE = """
 
     <header class="navbar">
         <div class="logo">
-            <span>☁</span>
+            <span>☁️</span>
             <span>SkyPulse</span>
         </div>
         <div class="tagline">Know the sky. Plan your day.</div>
@@ -294,15 +307,16 @@ HTML_TEMPLATE = """
 
         {% if error %}
         <div class="error-card">
-            <p>{{ error }}</p>
+            <p>⚠️ {{ error }}</p>
         </div>
         {% endif %}
 
         {% if weather %}
         <div class="weather-card">
+            <div class="weather-icon-large">{{ weather.emoji }}</div>
             <div class="section-title">Current Weather</div>
-            <div class="city-name">{{ weather.city }}{% if weather.country %}, {{ weather.country }}{% endif %}</div>
-            <div class="date-time">{{ weather.current_time }}</div>
+            <div class="city-name">📍 {{ weather.city }}{% if weather.country %}, {{ weather.country }}{% endif %}</div>
+            <div class="date-time">🕒 {{ weather.current_time }}</div>
 
             <div class="main-temp-area">
                 <div>
@@ -310,26 +324,26 @@ HTML_TEMPLATE = """
                         <span class="temp-val">{{ weather.temperature }}</span>
                         <span class="temp-unit">°C</span>
                     </div>
-                    <div class="weather-condition">{{ weather.condition_text }}</div>
+                    <div class="weather-condition">{{ weather.emoji }} {{ weather.condition_text }}</div>
                     <div class="feels-like">Feels like {{ weather.apparent_temp }}°C</div>
                 </div>
             </div>
 
             <div class="details-grid">
                 <div class="detail-item">
-                    <div class="detail-label">Humidity</div>
+                    <div class="detail-label">💧 Humidity</div>
                     <div class="detail-value">{{ weather.humidity }}%</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Wind Speed</div>
+                    <div class="detail-label">🌬️ Wind Speed</div>
                     <div class="detail-value">{{ weather.windspeed }} km/h</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Precipitation</div>
+                    <div class="detail-label">🌧️ Precipitation</div>
                     <div class="detail-value">{{ weather.precipitation }} mm</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Air Quality (AQI)</div>
+                    <div class="detail-label">🍃 Air Quality (AQI)</div>
                     <div class="detail-value">{{ weather.aqi }}</div>
                 </div>
             </div>
@@ -338,12 +352,13 @@ HTML_TEMPLATE = """
         {% if forecast %}
         <div class="forecast-container">
             <div class="section-title">Plan Ahead</div>
-            <div class="city-name" style="font-size: 18px;">5-Day Forecast</div>
+            <div class="city-name" style="font-size: 18px;">📅 5-Day Forecast</div>
             <div class="forecast-grid">
                 {% for day in forecast %}
                 <div class="forecast-card">
                     <div class="forecast-day">{{ day.date }}</div>
-                    <div style="font-size: 13px; color: var(--sub-text);">{{ day.condition }}</div>
+                    <div class="forecast-emoji">{{ day.emoji }}</div>
+                    <div style="font-size: 12px; color: var(--sub-text);">{{ day.condition }}</div>
                     <div class="forecast-temp">{{ day.max_temp }}° <span>/ {{ day.min_temp }}°</span></div>
                 </div>
                 {% endfor %}
@@ -354,33 +369,34 @@ HTML_TEMPLATE = """
     </main>
 
     <footer>
-        <p>SkyPulse · Built with Python, HTML and CSS</p>
+        <p>SkyPulse · Built with Python, HTML and CSS ⚡</p>
     </footer>
 
 </body>
 </html>
 """
 
-def get_weather_description(code):
-    weather_codes = {
-        0: "Clear Sky", 
-        1: "Mainly Clear", 
-        2: "Partly Cloudy", 
-        3: "Overcast",
-        45: "Foggy", 
-        48: "Depositing Rime Fog", 
-        51: "Light Drizzle", 
-        53: "Moderate Drizzle",
-        55: "Dense Drizzle", 
-        61: "Slight Rain", 
-        63: "Moderate Rain", 
-        65: "Heavy Rain",
-        71: "Slight Snow", 
-        73: "Moderate Snow", 
-        75: "Heavy Snow", 
-        95: "Thunderstorm"
+def get_weather_info(code):
+    # Returns a tuple of (Description, Emoji)
+    weather_map = {
+        0: ("Clear Sky", "☀️"),
+        1: ("Mainly Clear", "🌤️"),
+        2: ("Partly Cloudy", "⛅"),
+        3: ("Overcast", "☁️"),
+        45: ("Foggy", "🌫️"),
+        48: ("Depositing Rime Fog", "🌫️"),
+        51: ("Light Drizzle", "🌦️"),
+        53: ("Moderate Drizzle", "🌧️"),
+        55: ("Dense Drizzle", "🌧️"),
+        61: ("Slight Rain", "🌦️"),
+        63: ("Moderate Rain", "🌧️"),
+        65: ("Heavy Rain", "🌧️"),
+        71: ("Slight Snow", "🌨️"),
+        73: ("Moderate Snow", "❄️"),
+        75: ("Heavy Snow", "❄️"),
+        95: ("Thunderstorm", "⚡")
     }
-    return weather_codes.get(code, "Clear Sky")
+    return weather_map.get(code, ("Clear Sky", "☀️"))
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -388,7 +404,6 @@ def home():
     forecast_data = None
     error_message = None
     
-    # Auto Theme based on time (6 AM to 6 PM = Light, otherwise Dark)
     current_hour = datetime.now().hour
     theme_class = "" if (6 <= current_hour < 18) else "dark-theme"
 
@@ -396,7 +411,6 @@ def home():
         city = request.form.get("city")
         if city and city.strip():
             try:
-                # Geocoding API
                 geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city.strip()}&count=1"
                 geo_res = requests.get(geo_url, timeout=10).json()
 
@@ -405,42 +419,58 @@ def home():
                     lat, lon = loc["latitude"], loc["longitude"]
                     city_name, country = loc["name"], loc.get("country", "")
 
-                    # Weather API with Forecast
-                    w_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto"
+                    w_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&hourly=relative_humidity_2m,apparent_temperature,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto"
                     w_res = requests.get(w_url, timeout=10).json()
 
-                    # Air Quality API
                     aqi_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=us_aqi"
                     aqi_res = requests.get(aqi_url, timeout=10).json()
                     aqi_val = aqi_res.get("current", {}).get("us_aqi", "N/A")
 
-                    current = w_res.get("current", {})
+                    current = w_res.get("current_weather", {})
+                    hourly = w_res.get("hourly", {})
                     daily = w_res.get("daily", {})
+
+                    humidity = 50
+                    apparent_temp = current.get("temperature", 0)
+                    precipitation = 0.0
+
+                    if "relative_humidity_2m" in hourly and len(hourly["relative_humidity_2m"]) > 0:
+                        humidity = hourly["relative_humidity_2m"][0]
+                    if "apparent_temperature" in hourly and len(hourly["apparent_temperature"]) > 0:
+                        apparent_temp = hourly["apparent_temperature"][0]
+                    if "precipitation" in hourly and len(hourly["precipitation"]) > 0:
+                        precipitation = hourly["precipitation"][0]
+
+                    weather_code = current.get("weathercode", 0)
+                    cond_text, cond_emoji = get_weather_info(weather_code)
 
                     weather_data = {
                         "city": city_name,
                         "country": country,
                         "current_time": datetime.now().strftime("%A, %d %B %Y · %I:%M %p"),
-                        "temperature": round(current.get("temperature_2m", 0)),
-                        "apparent_temp": round(current.get("apparent_temperature", 0)),
-                        "humidity": round(current.get("relative_humidity_2m", 0)),
-                        "windspeed": round(current.get("wind_speed_10m", 0)),
-                        "precipitation": current.get("precipitation", 0),
-                        "condition_text": get_weather_description(current.get("weather_code", 0)),
+                        "temperature": round(current.get("temperature", 0)),
+                        "apparent_temp": round(apparent_temp),
+                        "humidity": round(humidity),
+                        "windspeed": round(current.get("windspeed", 0)),
+                        "precipitation": precipitation,
+                        "condition_text": cond_text,
+                        "emoji": cond_emoji,
                         "aqi": aqi_val
                     }
 
-                    # 5-Day Forecast parsing
                     forecast_data = []
                     if "time" in daily:
                         for i in range(min(5, len(daily["time"]))):
                             date_str = daily["time"][i]
                             formatted_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%a, %d %b")
+                            f_code = daily["weather_code"][i]
+                            f_text, f_emoji = get_weather_info(f_code)
                             forecast_data.append({
                                 "date": formatted_date,
                                 "max_temp": round(daily["temperature_2m_max"][i]),
                                 "min_temp": round(daily["temperature_2m_min"][i]),
-                                "condition": get_weather_description(daily["weather_code"][i])
+                                "condition": f_text,
+                                "emoji": f_emoji
                             })
                 else:
                     error_message = f"City '{city}' not found. Please check the spelling."
